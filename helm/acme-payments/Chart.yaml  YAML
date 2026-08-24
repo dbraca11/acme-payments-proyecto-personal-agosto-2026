@@ -1,0 +1,6 @@
+apiVersion: v2
+name: acme-payments
+description: Helm chart for ACME Payments API
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
