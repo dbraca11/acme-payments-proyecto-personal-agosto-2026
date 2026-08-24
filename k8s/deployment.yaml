@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: acme-payments
+  labels:
+    app: acme-payments
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: acme-payments
+  template:
+    metadata:
+      labels:
+        app: acme-payments
+    spec:
+      containers:
+      - name: acme-payments
+        image: ghcr.io/dbraca11/acme-payments:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
