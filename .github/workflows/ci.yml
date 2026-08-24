@@ -1,23 +1,24 @@
-name: CI
+name: CI Pipeline
 
 on:
-  pull_request:
-    branches:
-      - main
   push:
-    branches:
-      - main
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
-  test:
-    name: Run tests
+  build-test-and-publish:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -33,14 +34,27 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t acme-payments:ci .
+          docker build -t ghcr.io/${{ github.repository_owner }}/acme-payments:${{ github.sha }} .
+          docker tag ghcr.io/${{ github.repository_owner }}/acme-payments:${{ github.sha }} ghcr.io/${{ github.repository_owner }}/acme-payments:latest
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: "acme-payments:ci"
+          image-ref: "ghcr.io/${{ github.repository_owner }}/acme-payments:${{ github.sha }}"
           format: "table"
           exit-code: "1"
           ignore-unfixed: true
           vuln-type: "os,library"
           severity: "CRITICAL,HIGH"
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push Docker image to GHCR
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/acme-payments:${{ github.sha }}
+          docker push ghcr.io/${{ github.repository_owner }}/acme-payments:latest
