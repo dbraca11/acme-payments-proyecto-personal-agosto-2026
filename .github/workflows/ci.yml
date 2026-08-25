@@ -70,6 +70,5 @@ jobs:
 
       - name: Deploy Helm Chart (Dry Run Validation)
         run: |
-          helm upgrade --install acme-payments helm/acme-payments \
-            --set image.tag=${{ github.sha }} \
-            --dry-run=client
+          helm template acme-payments helm/acme-payments \
+            --set image.tag=${{ github.sha }}
