@@ -67,3 +67,9 @@ jobs:
         run: |
           docker push ghcr.io/${{ github.repository_owner }}/acme-payments:${{ github.sha }}
           docker push ghcr.io/${{ github.repository_owner }}/acme-payments:latest
+
+      - name: Deploy Helm Chart (Dry Run Validation)
+        run: |
+          helm upgrade --install acme-payments helm/acme-payments \
+            --set image.tag=${{ github.sha }} \
+            --dry-run
