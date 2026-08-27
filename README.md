@@ -18,7 +18,65 @@ Prototipo de microservicio de pagos de alta disponibilidad con entrega continua,
   - [x] Validación de disponibilidad continua mediante la estrategia de *RollingUpdate*.
   - [x] Sincronización e imposición de estado deseado vía Argo CD Sync.
 
-### 🔮 Próximas Mejoras (Future Enhancements)
-- [ ] **Seguridad:** Integrar análisis de vulnerabilidades en imágenes con Trivy en el pipeline CI.
-- [ ] **Métricas Personalizadas:** Exponer métricas de endpoints HTTP con `prometheus-fastapi-instrumentator`.
-- [ ] **Ingress Controller:** Exponer el servicio públicamente con NGINX Ingress y certificados TLS.
+```mermaid
+graph TD
+    subgraph DEV[1. Desarrollo & Contenedores]
+        A[🐍 API FastAPI]
+        B[🐳 Dockerfile]
+        C[📦 Imagen acme-payments:local]
+        D[⚙️ Importación a containerd]
+        E[📄 Manifiestos K8s]
+        F[🐙 Repositorio GitHub]
+    end
+
+    subgraph K8S[2. Clúster de Kubernetes]
+        subgraph ARGOCD[Namespace: argocd]
+            G[🐙 Argo CD Application]
+        end
+        subgraph DEFAULT[Namespace: default]
+            H[🔌 Service ClusterIP:8000]
+            I[☸️ Deployment acme-payments]
+            J[🚀 Pod 1 - FastAPI]
+            K[🚀 Pod 2 - FastAPI]
+        end
+        subgraph MONITORING[Namespace: monitoring]
+            L[📊 Grafana NodePort]
+        end
+    end
+
+    subgraph OPS[3. Operación & Resiliencia]
+        M[⚠️ Inyección de Fallo v-error]
+        N[✅ Rolling Update - Pods activos]
+        O[🔄 Argo CD Self Healing]
+    end
+
+    A --> B --> C --> D --> I
+    A --> E --> F --> G --> I
+    H --> I
+    I --> J
+    I --> K
+    L -.->|Monitoreo| I
+    M -->|Dispara incidente| I
+    I -->|Mantiene disponibilidad| N
+    G -->|Sincroniza y repara| O
+    O -->|Restaura imagen sana| I
+
+    %% Definición de Estilos e Identidad de Marca
+    classDef python fill:#3776AB,stroke:#1e3d59,color:#fff,font-weight:bold;
+    classDef docker fill:#0db7ed,stroke:#0984af,color:#fff,font-weight:bold;
+    classDef k8s fill:#326ce5,stroke:#1b4bb0,color:#fff,font-weight:bold;
+    classDef argo fill:#ef7b4d,stroke:#c45528,color:#fff,font-weight:bold;
+    classDef grafana fill:#f46800,stroke:#ba4f00,color:#fff,font-weight:bold;
+    classDef github fill:#24292e,stroke:#000,color:#fff,font-weight:bold;
+    classDef alert fill:#e74c3c,stroke:#c0392b,color:#fff,font-weight:bold;
+    classDef success fill:#2ecc71,stroke:#27ae60,color:#fff,font-weight:bold;
+
+    class A,J,K python;
+    class B,C,D docker;
+    class E,H,I k8s;
+    class G,O argo;
+    class L grafana;
+    class F github;
+    class M alert;
+    class N success;
+```
